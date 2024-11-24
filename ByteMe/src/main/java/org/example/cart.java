@@ -1,18 +1,33 @@
 package org.example;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
 import java.util.*;
 
 import static org.example.Main.allCustomers;
+import static org.example.customer.customerCarts;
+import static org.example.customer.customerPendingOrders;
 import static org.example.menu.allItems;
+import static org.example.cartController.pendingCarts;
 
-public class cart extends order {
-    private final Scanner scanner = new Scanner(System.in);
+public class cart extends order implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private transient Scanner scanner = new Scanner(System.in);
+
 
     public cart(String email, String status) {
         super(allCustomers.get(email), status);
+        System.out.println("crt class created");
+
     }
+    private Scanner getScanner() {
+        if (this.scanner == null) {
+            this.scanner = new Scanner(System.in);  // Initialize if not already initialized
+        }
+        return this.scanner;
+    }
+
     public void cartMenu(customer customer) {
+        this.scanner=getScanner();
         boolean continueCart = true;
         while (continueCart) {
             System.out.println("Select one of the following options for modifying the menu:");
@@ -25,13 +40,12 @@ public class cart extends order {
             System.out.print("Enter your choice: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
-
             switch (choice) {
                 case 1:
-                    addItems();
+                    addItems(customer);
                     break;
                 case 2:
-                    modifyQuantities();
+                    modifyQuantities(customer);
                     break;
                 case 3:
                     removeItems();
@@ -53,37 +67,40 @@ public class cart extends order {
             }
         }
     }
-    protected int totalPriceCalCart() {
+    public int totalPriceCalCart() {
         double total = 0;
         for (foodItem item : items) {
             total += item.getPrice() * qtyMap.get(item);
         }
         return (int) total;
     }
-
-    public void addItems(){
+    public void checkAvailableAndAdd(foodItem item,int foodQty,String foodId,customer customer){
+        if (allItems.get(foodId).getQty()+foodQty<allItems.get(foodId).getAvailability()) {
+            if(items.contains(item)){
+                qtyMap.compute(item, (k, crtQty) -> crtQty + foodQty);
+            }else{
+                items.add(item);
+                qtyMap.put(item,foodQty);
+                statusMap.put(item," On the way ....");
+            }
+            item.setQty(item.getQty()+foodQty);
+            customerCarts.put(customer,this);
+            System.out.println("Item added successfully!");
+        } else {
+            System.out.println("Food item not available anymore!");
+        }
+    }
+    public void addItems(customer customer){
         System.out.println("-------------Add items only after viewing the menu----------------- ");
         String choice = "y";
         while (choice.equalsIgnoreCase("y")) {
             System.out.println("Enter the Food ID:");
             String foodId = scanner.next();
+            foodItem item = allItems.get(foodId);
+            System.out.println("Enter the quantity for " + item.getName() + ":");
+            int foodQty = scanner.nextInt();
             if (allItems.containsKey(foodId)) {
-                foodItem item = allItems.get(foodId);
-                System.out.println("Enter the quantity for " + item.getName() + ":");
-                int foodQty = scanner.nextInt();
-                if (allItems.get(foodId).getQty()+foodQty<allItems.get(foodId).getAvailability()) {
-                    if(items.contains(item)){
-                        qtyMap.compute(item, (k, crtQty) -> crtQty + foodQty);
-                    }else{
-                        items.add(item);
-                        qtyMap.put(item,foodQty);
-                        statusMap.put(item," On the way ....");
-                    }
-                    item.setQty(item.getQty()+foodQty);
-                    System.out.println("Item added successfully!");
-                } else {
-                    System.out.println("Food item not available anymore!");
-                }
+                checkAvailableAndAdd(item,foodQty,foodId,customer);
             } else {
                 System.out.println("---INCORRECT FOOD-ITEM ID PROVIDED----> Try again!");
             }
@@ -101,8 +118,18 @@ public class cart extends order {
             System.out.println(item.getFoodId()+" -> "+item.getName() + " - Quantity: " + qtyMap.get(item)+ ", Price: $" + item.getPrice());
         }
     }
+    public void checkNegative(int newQty,foodItem cartItem,customer customer){
+        if (newQty > 0) {
+            cartItem.setQty(cartItem.getQty()-qtyMap.get(cartItem)+newQty);
+            qtyMap.put(cartItem,newQty);
+            customerCarts.put(customer,this);
+            System.out.println("Quantity updated successfully!");
+        } else {
+            System.out.println("Invalid quantity. Please enter a positive number.");
+        }
+    }
 
-    public void modifyQuantities() {
+    public void modifyQuantities(customer customer) {
         System.out.println("___________________________________________________");
         String choice = "y";
         while (choice.equalsIgnoreCase("y")) {
@@ -115,13 +142,7 @@ public class cart extends order {
                 if (cartItem.getFoodId().equals(foodId)) {
                     System.out.println("Enter the new quantity for " + cartItem.getName() + ":");
                     int newQty = scanner.nextInt();
-                    if (newQty > 0) {
-                        cartItem.setQty(cartItem.getQty()-qtyMap.get(cartItem)+newQty);
-                        qtyMap.put(cartItem,newQty);
-                        System.out.println("Quantity updated successfully!");
-                    } else {
-                        System.out.println("Invalid quantity. Please enter a positive number.");
-                    }
+                    checkNegative(newQty,cartItem,customer);
                     itemFound = true;
                     break;
                 }
@@ -159,6 +180,7 @@ public class cart extends order {
 
     public void checkout(customer customer) {
         System.out.println("-------------Checking out-----------");
+        customerCarts.remove(customer);
         order finalizedOrder = this;
         order newOrder = new order(customer, "On the way.......");
         newOrder.setItems(new HashSet<>(finalizedOrder.getItems()));
@@ -183,11 +205,13 @@ public class cart extends order {
             System.out.println(item.getName()+" with qty"+newOrder.getQtyMap().get(item));
         }
         if(customer.isVIP){
-            admin.regularVIPOrders.add(newOrder);
+            regularVIPOrders.add(newOrder);
         }else{
-            admin.regularPendingOrders.add(newOrder);
+            regularPendingOrders.add(newOrder);
         }
+        //
         customer.addOrder(newOrder);
+        customerPendingOrders.put(customer,customer.getPendingOrders());
         admin.orderIdMap.put(newOrder.getOrderId(),newOrder);
         System.out.println("order total: "+newOrder.totalPriceCal() +" with order ID "+newOrder.getOrderId());
         System.out.println("Checkout complete. Cart is now empty.");

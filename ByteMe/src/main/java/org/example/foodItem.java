@@ -1,8 +1,10 @@
 package org.example;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class foodItem implements Comparable<foodItem> { // Implement Comparable
+public class foodItem implements Comparable<foodItem>, Serializable {
+    private static final long serialVersionUID = 1L;// Implement Comparable
     private String name;
     private double price;
     private String foodId;
@@ -12,10 +14,12 @@ public class foodItem implements Comparable<foodItem> { // Implement Comparable
     private List<order> pendingOrders;
 
 
+
     public foodItem(String name, double price, String foodId, int availability) {
         this.name = name;
         this.price = price;
         this.foodId = foodId;
+        System.out.println("fooditem made");
         this.qty = 0;
         this.availability =availability ;
         this.reviews=new TreeMap<>();

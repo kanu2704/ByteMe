@@ -1,18 +1,29 @@
 package org.example;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import static org.example.historyController.loadHistoryFromFile;
+import static org.example.historyController.saveHistoryToFile;
 import static org.example.menu.*;
+import static org.example.menuController.loadMenuFromFile;
+import static org.example.menuController.saveMenuToFile;
+import static org.example.pendingOrdersController.loadOrderFromFile;
+import static org.example.pendingOrdersController.saveOrderToFile;
+import static org.example.cartController.loadCartsFromFile;
+import static org.example.cartController.saveCartsToFile;
 
 public class Main {
     public static Map<String, customer> allCustomers = new HashMap<>(); // email, instance
     public static admin adminInstance = new admin();
     public static customerHomePage customerHomePage = new customerHomePage();
     public static menu menu = new menu();
-    protected static void openingPage(){
+
+    protected static void openingPage() throws FileNotFoundException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("------------Welcome to Byte Me !!!!!!!!!---------------");
         System.out.println();
@@ -40,7 +51,11 @@ public class Main {
         exit();
         scanner.close();
     }
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        loadHistoryFromFile();
+        loadCartsFromFile();
+        loadMenuFromFile();
+        loadOrderFromFile();
         customer c1=new customer("kanu","kanu@example.com");
         customer c2=new customer("ishaan","ishaan@example.com");
         customer c3=new customer("manad","manad@example.com");
@@ -107,7 +122,11 @@ public class Main {
 
         openingPage();
     }
-    public static void exit(){
+    public static void exit() throws FileNotFoundException {
+        saveMenuToFile();
+        saveOrderToFile();
+        saveHistoryToFile();
+        saveCartsToFile();
         System.out.println("Thank you for using Byte Me! Goodbye!!!!!!!!!!!!!!!!!!!.");
         System.exit(0);
     }

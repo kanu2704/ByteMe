@@ -1,12 +1,24 @@
 package org.example;
+import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.*;
 
-public class customerHomePage {
+import static org.example.order.regularPendingOrders;
+import static org.example.order.regularVIPOrders;
 
+public class customerHomePage implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    private static final Scanner scanner = new Scanner(System.in); // Scanner to get user input
+    private static transient Scanner scanner = new Scanner(System.in); // Scanner to get user input
+    private static Scanner getScanner() {
+        if (scanner == null) {
+            scanner = new Scanner(System.in);  // Initialize if not already initialized
+        }
+        return scanner;
+    }
 
-    protected static void displayHomePage(customer customer){
+    protected static void displayHomePage(customer customer) throws FileNotFoundException {
+        scanner=getScanner();
         System.out.println("---------------Welcome to the Customer Home page------------------");
 
         int choice;
@@ -71,8 +83,8 @@ public class customerHomePage {
                                         admin.refunds.put(customer,orderToCancel.get().totalPriceCal());
                                         customer.getPendingOrders().remove(orderToCancel.get());
                                         customer.getAllOrders().add(orderToCancel.get());
-                                        admin.regularPendingOrders.remove(orderToCancel);
-                                        admin.regularVIPOrders.remove(orderToCancel);
+                                        regularPendingOrders.remove(orderToCancel);
+                                        regularVIPOrders.remove(orderToCancel);
                                         System.out.println("Order with ID " + id + " has been canceled.");
                                     } else {
                                         System.out.println("Order ID not found. Please enter a valid ID.");
@@ -145,9 +157,9 @@ public class customerHomePage {
                                                     item.getPendingOrders().add(newOrder);
                                                 }
                                                 if(customer.isVIP){
-                                                    admin.regularVIPOrders.add(newOrder);
+                                                    regularVIPOrders.add(newOrder);
                                                 }else{
-                                                    admin.regularPendingOrders.add(newOrder);
+                                                    regularPendingOrders.add(newOrder);
                                                 }
                                                 admin.orderIdMap.put(newOrder.getOrderId(),newOrder);
                                                 System.out.println("order total: "+newOrder.totalPriceCal());

@@ -1,10 +1,17 @@
 package org.example;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class customer implements Comparable<customer>{
+import static org.example.historyController.customerOrders;
+import static org.example.cartController.pendingCarts;
+import static org.example.pendingOrdersController.CustomerPendingOrders;
+
+public class customer implements Comparable<customer>, Serializable {
+    private static final long serialVersionUID = 1L;
     private String name;
     private String email;
     private TreeSet<order> allOrders;//to see for order history
@@ -13,42 +20,61 @@ public class customer implements Comparable<customer>{
     private TreeSet<review> reviews;
     protected boolean isVIP;
     protected List<foodItem> pastFoodItem;
-
+    public static TreeMap<customer, TreeSet<order>> customerPreviousOrders;
+    public static TreeMap<customer,cart> customerCarts;
+    public static TreeMap<customer,TreeSet<order>> customerPendingOrders;
     public customer(String name, String email){
         this.name=name;
         this.email=email;
-        this.customerCart= new cart(email,"Cart empty..no order placed..");
-        this.allOrders=new TreeSet<>();
+        System.out.println("made customer");
+        customerCarts=pendingCarts;
+        customerPreviousOrders=customerOrders;
+        customerPendingOrders=CustomerPendingOrders;
+        if (customerPreviousOrders == null) {
+            customerPreviousOrders = new TreeMap<>();
+        }else{
+            if(customerPreviousOrders.containsKey(this)){
+                this.allOrders=customerPreviousOrders.get(this);
+            }else{
+                this.allOrders=new TreeSet<>();
+            }
+        }
+        if (customerCarts == null) {
+            customerCarts = new TreeMap<>();
+        }else{
+            if(customerCarts.containsKey(this)){
+                this.customerCart=customerCarts.get(this);
+            }else{
+                this.customerCart= new cart(email,"Cart empty..no order placed..");
+            }
+        }
+        System.out.println("made cart also");
+        if (customerPendingOrders == null) {
+            customerPendingOrders = new TreeMap<>();
+        }else{
+            if(customerPendingOrders.containsKey(this)){
+                this.pendingOrders=customerPendingOrders.get(this);
+            }else{
+                this.pendingOrders=new TreeSet<>();
+            }
+        }
         this.reviews=new TreeSet<>();
         this.isVIP=false;
-        this.pendingOrders=new TreeSet<>();
         this.pastFoodItem=new ArrayList<>();
     }
     public String getName() {
         return name;
     }
-    public void setName(String name) {
-        this.name = name;
-    }
     public String getEmail() {
         return email;
     }
-    public void setEmail(String email) {
-        this.email = email;
-    }
 
-    public TreeSet<order> getOrders() {
-        return allOrders;
-    }
     public void addOrder(order newOrder) {
         pendingOrders.add(newOrder);
         System.out.println(pendingOrders.size());
     }
     public cart getCustomerCart() {
         return customerCart;
-    }
-    public void setCustomerCart(cart customerCart) {
-        this.customerCart = customerCart;
     }
     public TreeSet<order> getPendingOrders(){
         return pendingOrders;
@@ -59,23 +85,12 @@ public class customer implements Comparable<customer>{
     public TreeSet<order> getAllOrders() {
         return allOrders;
     }
-    public void setAllOrders(TreeSet<order> allOrders) {
-        this.allOrders = allOrders;
-    }
     public TreeSet<review> getReviews() {
         return reviews;
     }
 
-    public void setReviews(TreeSet<review> reviews) {
-        this.reviews = reviews;
-    }
-
     public List<foodItem> getPastFoodItem() {
         return pastFoodItem;
-    }
-
-    public void setPastFoodItem(List<foodItem> pastFoodItem) {
-        this.pastFoodItem = pastFoodItem;
     }
 
 

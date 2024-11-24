@@ -1,18 +1,26 @@
 package org.example;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class review implements Comparable<review>{
-    private static final Scanner scanner=new Scanner(System.in);
+public class review implements Comparable<review>, Serializable {
+    private static final long serialVersionUID = 1L;
+    private static transient Scanner scanner=new Scanner(System.in);
     private customer customer;
     private String reviewDescription;
     private foodItem item;
     private int stars;
-
+    private Scanner getScanner() {
+        if (this.scanner == null) {
+            this.scanner = new Scanner(System.in);  // Initialize if not already initialized
+        }
+        return this.scanner;
+    }
     public review(customer customer,foodItem item,int stars){
+        this.scanner=getScanner();
         this.customer=customer;
         this.item=item;
         this.stars=stars;

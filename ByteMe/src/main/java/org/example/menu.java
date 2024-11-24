@@ -1,19 +1,27 @@
 package org.example;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.*;
 
-public class menu {
-    private final static Scanner scanner=new Scanner(System.in);
-    static TreeMap<String,foodItem> allItems=new TreeMap<>();
+public class menu implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static transient Scanner scanner=new Scanner(System.in);
+    public static TreeMap<String,foodItem> allItems=new TreeMap<>();
     static Map<String,foodItem> all=new HashMap<>();
-    protected static TreeMap<String, foodItem> normalMenu = new TreeMap<>(); // Sorted by item name
+    public static TreeMap<String, foodItem> normalMenu = new TreeMap<>(); // Sorted by item name
     protected static TreeMap<String, foodItem> drinkItems=new TreeMap<>();
     protected static TreeMap<String, foodItem> packagedItems=new TreeMap<>();
     protected static TreeMap<String, TreeMap<String, TreeMap<String, foodItem>>> dailyMenus = new TreeMap<>();
-
-    public static void displayMenu(customer customer) {
+    private static Scanner getScanner() {
+        if (scanner == null) {
+            scanner = new Scanner(System.in);  // Initialize if not already initialized
+        }
+        return scanner;
+    }
+    public static void displayMenu(customer customer) throws FileNotFoundException {
+        scanner=getScanner();
         boolean continueMenu = true;
         while (continueMenu) {
             System.out.println("----------------------This is the Canteen Menu---------------------------");
@@ -123,7 +131,6 @@ public class menu {
             System.out.println(entry.getValue().getName() + " - $" + entry.getValue().getPrice()+" Availabilty :"+(entry.getValue().getAvailability()-entry.getValue().getQty()));
         }
     }
-
     private static void displaySortedMenuByName(TreeMap<String, foodItem> itemsMap, String header) {
         List<Map.Entry<String, foodItem>> sortedItems = new ArrayList<>(itemsMap.entrySet());
         sortedItems.sort(Map.Entry.comparingByValue(foodItem.byName));
@@ -232,4 +239,5 @@ public class menu {
             allItems.put(name, newItem);
         }
     }
+
 }

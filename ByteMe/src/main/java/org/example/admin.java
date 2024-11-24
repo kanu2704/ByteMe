@@ -1,21 +1,37 @@
 package org.example;
+import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.*;
 
+import static org.example.order.regularPendingOrders;
+import static org.example.order.regularVIPOrders;
+import static org.example.pendingOrdersController.regularOrders;
+import static org.example.pendingOrdersController.vipOrders;
+import static org.example.customer.customerPendingOrders;
+import static org.example.customer.customerPreviousOrders;
 import static org.example.foodItem.byQty;
 import static org.example.menu.*;
 
-public class admin {
-    private static final Scanner scanner = new Scanner(System.in);
-    protected static Queue<order> regularPendingOrders= new LinkedList<>();
-    protected static Queue<order> regularVIPOrders= new LinkedList<>();
+public class admin implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static transient Scanner scanner = new Scanner(System.in);
+
+
     protected static TreeMap<Integer,order> orderIdMap=new TreeMap<>();
     protected static List<order> speReq=new ArrayList<>();
     protected static Map<customer,Integer> refunds=new HashMap<>();
     private static List<order> dailyOrders=new ArrayList<>();
     private static int loss;
     protected static TreeSet<foodItem> dailyItemSales=new TreeSet<>(byQty);
+    private static Scanner getScanner() {
+        if (scanner == null) {
+            scanner = new Scanner(System.in);  // Initialize if not already initialized
+        }
+        return scanner;
+    }
 
-    protected static void displayHomePage() {
+    protected static void displayHomePage() throws FileNotFoundException {
+        scanner=getScanner();
         System.out.println("---------------Welcome to the Admin Home page------------------");
 
         int choice;
@@ -173,18 +189,18 @@ public class admin {
                             case 1:
                                 int i = 1;
                                 System.out.println("All the pending VIP orders are as follows :");
-                                for (order order : admin.regularVIPOrders) {
+                                for (order order : regularVIPOrders) {
                                     System.out.println(i + " Order with order ID " + order.getOrderId() + " by customer " + order.getCustomer().getName());
                                     System.out.println("Items in this order :");
                                     for(foodItem item: order.getItems()){
                                         System.out.println(item.getName()+" with qty "+order.getQtyMap().get(item));
                                     }
                                     i++;
-                                    System.out.println("-----------------");
+                                    System.out.println("--------------------");
                                 }
                                 int j = 1;
                                 System.out.println("All the pending regular customer orders are as follows :");
-                                for (order order : admin.regularPendingOrders) {
+                                for (order order : regularPendingOrders) {
                                     System.out.println(j + " Order with order ID " + order.getOrderId() + " by customer " + order.getCustomer().getName());
                                     System.out.println("Items in this order :");
                                     for(foodItem item: order.getItems()){
@@ -212,7 +228,15 @@ public class admin {
                                     if (status.equalsIgnoreCase("Delivered")) {
                                         order.setStatus("Delivered");
                                         order.getCustomer().addToAllOrders(order);
+                                        //
+                                        customerPreviousOrders.put(order.getCustomer(),order.getCustomer().getAllOrders());
                                         order.getCustomer().getPendingOrders().remove(order);
+                                        regularVIPOrders.remove(order);
+                                        if(!order.getCustomer().getPendingOrders().isEmpty()){
+                                            customerPendingOrders.put(order.getCustomer(),order.getCustomer().getPendingOrders());
+                                        }else{
+                                            customerPendingOrders.remove(order.getCustomer());
+                                        }
                                         regularVIPOrders.poll();
                                         dailyOrders.add(order);
                                         dailyItemSales.addAll(order.getItems());
@@ -248,7 +272,15 @@ public class admin {
                                         if (status.equalsIgnoreCase("Delivered")) {
                                             order.setStatus("Delivered");
                                             order.getCustomer().addToAllOrders(order);
+                                            //
+                                            customerPreviousOrders.put(order.getCustomer(),order.getCustomer().getAllOrders());
                                             order.getCustomer().getPendingOrders().remove(order);
+                                            regularPendingOrders.remove(order);
+                                            if(!order.getCustomer().getPendingOrders().isEmpty()){
+                                                customerPendingOrders.put(order.getCustomer(),order.getCustomer().getPendingOrders());
+                                            }else{
+                                                customerPendingOrders.remove(order.getCustomer());
+                                            }
                                             regularPendingOrders.poll();
                                             dailyOrders.add(order);
                                             dailyItemSales.addAll(order.getItems());
